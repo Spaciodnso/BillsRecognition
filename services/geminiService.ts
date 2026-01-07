@@ -59,17 +59,18 @@ export async function extractTextFromImage(base64ImageData: string, mimeType: st
     };
 
     const textPart = {
-      text: `Analiza la imagen. Primero, determina si esta imagen es un 'parte de trabajo' o un formulario similar al modelo que se te ha proporcionado anteriormente (un formulario de servicio técnico con campos específicos como Cliente, Fecha, Máquina/Modelo, Piezas Repuestas en formato tabla, etc.).
-      - Si la imagen NO es un 'parte de trabajo' o no coincide con la estructura del modelo, devuelve un JSON donde 'isWorkOrderForm' sea 'false' y todos los demás campos sean nulos o cadenas vacías.
-      - Si la imagen SÍ es un 'parte de trabajo' con una estructura similar al modelo, establece 'isWorkOrderForm' en 'true' y extrae todo el texto, tanto impreso como manuscrito, de cada campo. Devuélvelo como un objeto JSON estructurado según el schema. Presta especial atención a la escritura a mano para transcribirla con la mayor precisión posible. Para 'piezasRepuestas', devuelve un array de objetos. Si un campo está vacío en el formulario válido, devuelve una cadena vacía o null para ese campo.`,
+      text: `Evalúa la imagen. Si es un 'parte de trabajo' similar al modelo proporcionado (formulario de servicio con Cliente, Fecha, Máquina/Modelo, tabla de Piezas Repuestas):
+      - Establece 'isWorkOrderForm' en 'true' y extrae todo el texto (impreso y manuscrito) de cada campo, devolviendo un JSON según el schema. Transcribe la escritura a mano con precisión. Para 'piezasRepuestas', devuelve un array de objetos. Los campos vacíos deben ser null o cadenas vacías.
+      - Si NO es un 'parte de trabajo' o no coincide con la estructura del modelo, establece 'isWorkOrderForm' en 'false' y deja los demás campos como null o cadenas vacías.`,
     };
 
     const response = await ai.models.generateContent({
-      model: 'gemini-3-pro-preview',
+      model: 'gemini-3-flash-preview', // Optimized for speed
       contents: { parts: [imagePart, textPart] },
       config: {
         responseMimeType: "application/json",
         responseSchema: formSchema,
+        thinkingConfig: { thinkingBudget: 0 }, // Prioritize speed
       }
     });
     
