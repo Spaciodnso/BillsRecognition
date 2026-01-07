@@ -51,7 +51,8 @@ export default function App() {
     }
   }, [imageFile]);
   
-  const triggerFileSelect = () => fileInputRef.current?.click();
+  // No longer needed if using label for file input
+  // const triggerFileSelect = () => fileInputRef.current?.click();
 
   return (
     <div className="min-h-screen bg-gray-900 text-gray-100 flex flex-col items-center p-4 sm:p-6 md:p-8 font-sans">
@@ -67,25 +68,26 @@ export default function App() {
           <div className="w-full max-w-2xl bg-gray-800/50 border border-dashed border-gray-600 rounded-xl p-8 text-center transition-all duration-300">
             <input
               type="file"
+              id="file-upload-input" // Added ID for label
               ref={fileInputRef}
               onChange={handleImageChange}
               accept="image/png, image/jpeg, image/webp"
               className="hidden"
             />
             {!imageUrl ? (
-              <div className="flex flex-col items-center cursor-pointer" onClick={triggerFileSelect}>
+              <label htmlFor="file-upload-input" className="flex flex-col items-center cursor-pointer">
                 <UploadIcon className="w-12 h-12 text-gray-500 mb-4" />
                 <p className="text-gray-400">
                   <span className="font-semibold text-indigo-400">Click to upload</span> or drag and drop
                 </p>
                 <p className="text-xs text-gray-500 mt-1">PNG, JPG, or WEBP</p>
-              </div>
+              </label>
             ) : (
               <div className="flex flex-col items-center">
                 <img src={imageUrl} alt="Uploaded preview" className="max-h-64 rounded-lg shadow-lg mb-6" />
                 <div className="flex space-x-4">
                   <button
-                      onClick={triggerFileSelect}
+                      onClick={() => fileInputRef.current?.click()} // Trigger click explicitly for change image
                       className="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white font-semibold rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-gray-400"
                   >
                       Change Image

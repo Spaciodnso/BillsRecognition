@@ -7,21 +7,45 @@ interface StructuredResultDisplayProps {
   imageUrl: string;
 }
 
-const Field: React.FC<{ label: string; value: string | undefined }> = ({ label, value }) => (
-    <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4 border-t border-gray-700 first:border-t-0">
-      <dt className="text-sm font-medium text-gray-400">{label}</dt>
-      <dd className="mt-1 text-sm text-gray-200 sm:mt-0 sm:col-span-2 whitespace-pre-wrap">{value || 'N/A'}</dd>
-    </div>
-);
+const Field: React.FC<{ label: string; value: string | undefined }> = ({ label, value }) => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyField = useCallback(() => {
+        if (navigator.clipboard && value) {
+            navigator.clipboard.writeText(value).then(() => {
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
+            });
+        }
+    }, [value]);
+
+    return (
+        <div className="py-3 sm:grid sm:grid-cols-3 sm:gap-4 border-t border-gray-700 first:border-t-0">
+            <dt className="text-sm font-medium text-gray-400">{label}</dt>
+            <dd className="mt-1 text-sm text-gray-200 sm:mt-0 sm:col-span-2 flex items-center justify-between whitespace-pre-wrap">
+                <span className="flex-grow">{value || 'N/A'}</span>
+                {value && (
+                    <button
+                        onClick={handleCopyField}
+                        className="ml-2 p-1 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500"
+                        aria-label={`Copiar ${label}`}
+                    >
+                        {copied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <ClipboardIcon className="w-4 h-4" />}
+                    </button>
+                )}
+            </dd>
+        </div>
+    );
+};
 
 export const StructuredResultDisplay: React.FC<StructuredResultDisplayProps> = ({ data, imageUrl }) => {
-  const [copied, setCopied] = useState(false);
+  const [copiedJson, setCopiedJson] = useState(false); // Renamed to avoid conflict with Field's internal state
 
-  const handleCopy = useCallback(() => {
+  const handleCopyJson = useCallback(() => {
     if (navigator.clipboard && data) {
       navigator.clipboard.writeText(JSON.stringify(data, null, 2)).then(() => {
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
+        setCopiedJson(true);
+        setTimeout(() => setCopiedJson(false), 2000);
       });
     }
   }, [data]);
@@ -62,17 +86,18 @@ export const StructuredResultDisplay: React.FC<StructuredResultDisplayProps> = (
         <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-semibold text-gray-200">Datos Extraídos</h2>
             <button
-                onClick={handleCopy}
+                onClick={handleCopyJson}
                 className="flex items-center px-3 py-2 bg-gray-700 hover:bg-gray-600 text-sm font-medium rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500"
-                aria-label="Copy JSON"
+                aria-label="Copiar JSON"
             >
-                {copied ? <CheckIcon className="w-5 h-5 text-green-400 mr-2" /> : <ClipboardIcon className="w-5 h-5 text-gray-400 mr-2" />}
-                {copied ? 'Copiado!' : 'Copiar JSON'}
+                {copiedJson ? <CheckIcon className="w-5 h-5 text-green-400 mr-2" /> : <ClipboardIcon className="w-5 h-5 text-gray-400 mr-2" />}
+                {copiedJson ? 'Copiado!' : 'Copiar JSON'}
             </button>
         </div>
         
         <dl>
             {Object.entries(fieldLabels).map(([key, label]) => (
+                // Only render fields that have a value
                 mainData[key] && <Field key={key} label={label} value={mainData[key]} />
             ))}
         </dl>
@@ -90,13 +115,37 @@ export const StructuredResultDisplay: React.FC<StructuredResultDisplayProps> = (
                             </tr>
                         </thead>
                         <tbody className="bg-gray-800 divide-y divide-gray-600">
-                            {piezasRepuestas.map((pieza: any, index: number) => (
-                                <tr key={index}>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{pieza.codigo}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{pieza.denominacion}</td>
-                                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{pieza.cantidad}</td>
-                                </tr>
-                            ))}
+                            {piezasRepuestas.map((pieza: any, index: number) => {
+                                const [codigoCopied, setCodigoCopied] = useState(false);
+
+                                const handleCopyCodigo = useCallback(() => {
+                                    if (navigator.clipboard && pieza.codigo) {
+                                        navigator.clipboard.writeText(pieza.codigo).then(() => {
+                                            setCodigoCopied(true);
+                                            setTimeout(() => setCodigoCopied(false), 2000);
+                                        });
+                                    }
+                                }, [pieza.codigo]);
+
+                                return (
+                                    <tr key={index}>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 flex items-center justify-between">
+                                            <span className="flex-grow">{pieza.codigo}</span>
+                                            {pieza.codigo && (
+                                                <button
+                                                    onClick={handleCopyCodigo}
+                                                    className="ml-2 p-1 rounded-md text-gray-400 hover:text-white hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-800 focus:ring-indigo-500"
+                                                    aria-label={`Copiar código ${pieza.codigo}`}
+                                                >
+                                                    {codigoCopied ? <CheckIcon className="w-4 h-4 text-green-400" /> : <ClipboardIcon className="w-4 h-4" />}
+                                                </button>
+                                            )}
+                                        </td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{pieza.denominacion}</td>
+                                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{pieza.cantidad}</td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>
