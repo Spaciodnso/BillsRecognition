@@ -1,0 +1,5 @@
+{
+  "name": "Image Text Extractor",
+  "description": "An application that allows users to upload an image, extracts all text content from it using the Gemini API, and provides the functionality to copy the extracted text.",
+  "requestFramePermissions": []
+}
